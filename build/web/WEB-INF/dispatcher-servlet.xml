@@ -1,0 +1,109 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!-- was: <?xml version="1.0" encoding="UTF-8"?> -->
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+       http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.0.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd
+       http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd">
+
+    <bean class="org.springframework.web.servlet.mvc.support.ControllerClassNameHandlerMapping"/>
+
+    <!--
+    Most controllers will use the ControllerClassNameHandlerMapping above, but
+    for the index controller we are using ParameterizableViewController, so we must
+    define an explicit mapping for it.
+    -->
+    <bean id="urlMapping" class="org.springframework.web.servlet.handler.SimpleUrlHandlerMapping">
+        <property name="mappings">
+            <props>
+                <prop key="index.htm">indexController</prop>
+            </props>
+        </property>
+    </bean>
+    <!-- Spring MVC Annotation -->
+    <context:annotation-config />
+    <mvc:annotation-driven/>
+        
+    <!-- Cấu hình package chứa các controller -->
+    <context:component-scan base-package="thuandcps04971.controller"/>
+    <bean id="viewResolver"
+          class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+          p:prefix="/WEB-INF/jsp/"
+          p:suffix=".jsp" />
+
+    <!--
+    The index controller.
+    -->
+    <bean name="indexController"
+          class="org.springframework.web.servlet.mvc.ParameterizableViewController"
+          p:viewName="index" />
+    <mvc:resources mapping="/js/**" location="/resource/js/**"
+                   cache-period="31556926"/>
+   
+    <mvc:resources mapping="/css/**" location="/resource/css/**"
+                   cache-period="31556926"/>
+    <mvc:resources mapping="/fonts/**" location="/resource/fonts/**"
+                   cache-period="31556926"/>
+    <mvc:resources mapping="/images/**" location="/resource/images/**" 
+                   cache-period="31556926"/>
+    <bean id="multipartResolver" 
+          class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <!-- maxUploadSize=20MB -->
+        <property name="maxUploadSize" value="20971520"/>
+    </bean>
+    
+    <!-- Kết nối CSDL -->
+    <bean id="dataSource" 
+              class="org.springframework.jdbc.datasource.DriverManagerDataSource"
+              p:driverClassName="com.microsoft.sqlserver.jdbc.SQLServerDriver"
+              p:url="jdbc:sqlserver://thuandcps04971.database.windows.net:1433;database=thuandcps04971ass2"
+              p:username="ps04971@thuandcps04971"
+              p:password="ThuanDo123***">
+    </bean>
+	
+    <!-- Cấu hình Hibernate -->
+    <bean id="sessionFactory" 
+              class="org.springframework.orm.hibernate4.LocalSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="hibernateProperties">
+            <props>        
+                <prop key="hibernate.dialect">org.hibernate.dialect.SQLServerDialect</prop>          
+                <prop key="hibernate.show_sql">false</prop>
+            </props>
+        </property>
+        <property name="packagesToScan" value="entity"/>
+    </bean>
+	
+    <!-- Transaction Manager -->
+    <bean id="transactionManager" 
+          class="org.springframework.orm.hibernate4.HibernateTransactionManager" 
+          p:sessionFactory-ref="sessionFactory" />
+    <tx:annotation-driven transaction-manager="transactionManager" />
+    
+    <mvc:interceptors>  
+      
+        <mvc:interceptor>
+            <mvc:mapping path="/record/**"/>
+
+            <mvc:mapping path="/danhgianhiu/**"/>
+            <mvc:mapping path="/NhanVien/**"/>
+            <mvc:mapping path="/nhansu/**"/>
+            <mvc:mapping path="/uploader/**"/>
+            <mvc:exclude-mapping path="/Account/Login.htm"/>
+            <mvc:exclude-mapping path="/Top10/report.htm"/>
+            <mvc:exclude-mapping path="/Top10/vitri.htm"/>
+             
+            <bean class="interceptor.SecurityInterceptor" />
+        </mvc:interceptor>
+        
+    </mvc:interceptors>
+    
+    
+</beans>
